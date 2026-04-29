@@ -7,26 +7,53 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ CORS (only once, clean config)
+/**
+ * ✅ CORS Configuration (FIXED)
+ */
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://fashion-flick-frontend-6etm.vercel.app"
+];
+
 app.use(cors({
-  origin: [
-    "http://localhost:3000",                 // local frontend
-    "fashion-flick-frontend-6etm.vercel.app"  // deployed frontend (no slash)
-  ],
-  credentials: true,
+  origin: function (origin, callback) {
+    // allow requests with no origin (like Postman)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
 }));
 
-// Middleware
+/**
+ * ✅ Middleware
+ */
 app.use(express.json());
 
-// Routes
+/**
+ * ✅ Routes
+ */
 app.use("/api/orders", orderRoutes);
 
-// ✅ MongoDB Connection (UPDATED - no deprecated options)
+/**
+ * ✅ Health check route (optional but useful)
+ */
+app.get("/", (req, res) => {
+  res.send("API is running...");
+});
+
+/**
+ * ✅ MongoDB Connection
+ */
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log("✅ MongoDB connected");
-    
+
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
     });
